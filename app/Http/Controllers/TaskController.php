@@ -7,9 +7,19 @@ use App\Models\Task;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::orderBy('order')->get();
+        $filter = $request->query('filter');
+
+        
+        if ($filter === 'completed') {
+            $tasks = Task::where('is_completed', true)->orderBy('order')->get();
+        } elseif ($filter === 'pending') {
+            $tasks = Task::where('is_completed', false)->orderBy('order')->get();
+        } else {
+            $tasks = Task::orderBy('order')->get();; 
+        }
+
         return view('tasks.index', compact('tasks'));
     }
 
@@ -70,5 +80,13 @@ class TaskController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+    public function toggleCompletion(Task $task)
+    {
+        // Toggle task completion status
+        $task->is_completed = !$task->is_completed;
+        $task->save();
+
+        return redirect()->route('tasks.index')->with('success', 'Task status updated successfully.');
     }
 }
